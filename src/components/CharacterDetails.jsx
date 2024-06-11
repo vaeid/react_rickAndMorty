@@ -1,7 +1,33 @@
 import { ArrowUpCircleIcon } from '@heroicons/react/16/solid';
-import { character, episodes } from '../../data/data';
+import { episodes } from '../../data/data';
+import { useEffect, useState } from 'react';
+import axios from 'axios';
+import toast from 'react-hot-toast';
 
-export default function CharacterDetails() {
+export default function CharacterDetails({ isExistFavorite, selectCharacter, onAddFavorites }) {
+  const [character, setCharacters] = useState(null);
+  const [episodes, setEpisodes] = useState([]);
+  useEffect(() => {
+    if (selectCharacter) {
+      axios
+        .get(`https://rickandmortyapi.com/api/character/${selectCharacter}`)
+        .then(({ data }) => {
+          const episodesId = data.episode.map((ep) => ep.split('/').at(-1));
+          axios
+            .get(`https://rickandmortyapi.com/api/episode/${episodesId}`)
+            .then(({ data: episodesData }) => setEpisodes(episodesData.flat().slice(0, 10)));
+
+          setCharacters(data);
+        })
+
+        .catch((error) => {
+          toast.error(error.message);
+        });
+    }
+  }, [selectCharacter]);
+  if (!character || !selectCharacter) {
+    return <div className='navbar__logo'>Please select Charecter</div>;
+  }
   return (
     <div style={{ flex: 1 }}>
       <div className='character-detail'>
@@ -20,6 +46,17 @@ export default function CharacterDetails() {
           <div className='location'>
             <p>Last location:</p>
             <p>{character.location.name}</p>
+          </div>
+          <div className='actions'>
+            {isExistFavorite ? (
+              <button className='btn btn--primary' onClick={() => onAddFavorites(character, isExistFavorite)}>
+                remove from Favorites
+              </button>
+            ) : (
+              <button className='btn btn--primary' onClick={() => onAddFavorites(character, isExistFavorite)}>
+                Add to Favorites
+              </button>
+            )}
           </div>
         </div>
       </div>
