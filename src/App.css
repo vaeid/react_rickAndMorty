@@ -56,6 +56,8 @@
 
 .characters-list {
   width: 40%;
+  max-height: 75vh;
+  overflow-y: scroll;
 }
 
 .box h2 {
@@ -184,6 +186,8 @@
   background-color: var(--slate-800);
   border-radius: 1rem;
   padding: 1rem;
+  max-height: 50vh;
+  overflow-y: scroll;
 }
 
 .character-episodes .title {
@@ -224,4 +228,23 @@
   .character-detail__info .actions {
     flex-direction: row;
   }
+}
+/* width */
+::-webkit-scrollbar {
+  width: 2px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #888;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }

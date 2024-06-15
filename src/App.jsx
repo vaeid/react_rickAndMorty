@@ -6,12 +6,13 @@ import CharacterList from './components/CharacterList.jsx';
 import Navbar, { Favorites, NavbarResult, Search } from './components/Navbar.jsx';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+
 export default function App() {
   const [characters, setCharacters] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [query, setQuery] = useState('');
-  const [selectCharacterId, setSelectCharacterId] = useState(3);
-  const [favorites, setFavorites] = useState([]);
+  const [selectCharacterId, setSelectCharacterId] = useState(1);
+  const [favorites, setFavorites] = useState(() => JSON.parse(localStorage.getItem('Favorits')) || []);
   const handelSelectCharacter = (id) => {
     setSelectCharacterId(id);
   };
@@ -22,13 +23,22 @@ export default function App() {
       setFavorites((prevFav) => [...prevFav, character]);
     }
   };
-  const isExistFavorite = favorites.map((fav) => fav.id).includes(selectCharacterId);
 
+  const handelRemoveFavorite = (id) => {
+    setFavorites((prevFav) => prevFav.filter((fav) => fav.id !== id));
+  };
+  const isExistFavorite = favorites.map((fav) => fav.id).includes(selectCharacterId);
+  useEffect(() => {
+    localStorage.setItem('Favorits', JSON.stringify(favorites));
+  }, [favorites]);
   // ************** handel request with axios and then catch */
   useEffect(() => {
+    const controller = new AbortController();
+    const signal = controller.signal;
+
     setIsLoading(true);
     axios
-      .get(`https://rickandmortyapi.com/api/character?name=${query}`)
+      .get(`https://rickandmortyapi.com/api/character?name=${query}`, { signal })
       .then(({ data }) => {
         if (query.length > 2 || query.length == 0) {
           setCharacters(data.results.slice(0, 10));
@@ -38,10 +48,14 @@ export default function App() {
       })
       .catch((error) => {
         setCharacters([]);
-        toast.error(error.message);
+        if (axios.isCancel() === false) toast.error(error.message);
       })
       .finally(() => setIsLoading(false));
+    return () => {
+      controller.abort();
+    };
   }, [query]);
+
   //************** handel request with axios and async await */
   // useEffect(() => {
   //       setIsLoading(true);
@@ -92,11 +106,12 @@ export default function App() {
 
   return (
     <div className='app'>
-      <Toaster></Toaster>
+      <Toaster />
+
       <Navbar>
         <Search query={query} setQuery={setQuery} />
         <NavbarResult numOfResult={characters.length} />
-        <Favorites numOfFavs={favorites.length} />
+        <Favorites favorites={favorites} onRemoveFavorite={handelRemoveFavorite} />
       </Navbar>
       <Main>
         <CharacterList characters={characters} isLoading={isLoading} onSelectCharacter={handelSelectCharacter} />
